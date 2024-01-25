@@ -1,0 +1,71 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+public class TimeRange
+{
+    public DateTime Start { get; set; }
+    public DateTime End { get; set; }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        List<TimeRange> ranges = new List<TimeRange>
+        {
+            // Добавьте сюда ваши диапазоны
+        };
+
+        var groupedRanges = GroupOverlappingRanges(ranges);
+
+        foreach (var group in groupedRanges)
+        {
+            Console.WriteLine("Group:");
+            foreach (var range in group)
+            {
+                Console.WriteLine($"{range.Start} - {range.End}");
+            }
+        }
+    }
+
+    private static List<List<TimeRange>> GroupOverlappingRanges(List<TimeRange> ranges)
+    {
+        if (!ranges.Any())
+            return new List<List<TimeRange>>();
+
+        // Сортировка диапазонов по времени начала
+        var sortedRanges = ranges.OrderBy(r => r.Start).ToList();
+
+        var result = new List<List<TimeRange>>();
+        var currentGroup = new List<TimeRange> { sortedRanges[0] };
+
+        for (int i = 1; i < sortedRanges.Count; i++)
+        {
+            var lastRange = currentGroup.Last();
+            var currentRange = sortedRanges[i];
+
+            // Проверка пересечения
+            if (currentRange.Start <= lastRange.End)
+            {
+                lastRange.End = Max(lastRange.End, currentRange.End);
+            }
+            else
+            {
+                result.Add(new List<TimeRange>(currentGroup));
+                currentGroup.Clear();
+            }
+            currentGroup.Add(currentRange);
+        }
+
+        // Добавляем последнюю группу
+        result.Add(currentGroup);
+
+        return result;
+    }
+
+    private static DateTime Max(DateTime a, DateTime b)
+    {
+        return a > b ? a : b;
+    }
+}
