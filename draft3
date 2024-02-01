@@ -1,0 +1,54 @@
+using System;
+using System.IO;
+using System.Net.Sockets;
+using System.Text;
+
+class GraphiteMetricsSender
+{
+    private readonly string graphiteHost;
+    private readonly int graphitePort;
+
+    public GraphiteMetricsSender(string host, int port)
+    {
+        graphiteHost = host;
+        graphitePort = port;
+    }
+
+    public void SendMetric(string metricName, int value, long timestamp)
+    {
+        try
+        {
+            using (var client = new TcpClient(graphiteHost, graphitePort))
+            using (var stream = client.GetStream())
+            using (var writer = new StreamWriter(stream))
+            {
+                string message = $"{metricName} {value} {timestamp}\n";
+                writer.Write(message);
+                writer.Flush();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending metric: {ex.Message}");
+        }
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        string graphiteHost = "your.graphite.server.address"; // Замените на адрес вашего Graphite сервера
+        int graphitePort = 2003; // Замените на порт вашего Graphite сервера, если он отличается
+
+        var metricsSender = new GraphiteMetricsSender(graphiteHost, graphitePort);
+
+        string metricName = "test.metric.increment"; // Замените на имя вашей метрики
+        int metricValue = 1; // Значение метрики
+        long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds(); // UNIX timestamp
+
+        metricsSender.SendMetric(metricName, metricValue, timestamp);
+
+        Console.WriteLine("Metric sent.");
+    }
+}
